@@ -116,3 +116,11 @@ code {
 	color: #fcfcfc;
 }
 
+.small code {
+	font-size: 0.35em;
+}
+
+.medium code {
+	font-size: 0.5em;
+}
+

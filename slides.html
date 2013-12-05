@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Introduction to cloud=init</title>
+    <title>Introduction to cloud-init</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="slides.css"></link>
   </head>
@@ -16,16 +16,17 @@ class: center, middle
 
 ---
 
-## Overview
+## What is cloud-init?
 
 - Provides first-boot customization for cloud instances
+  using metadata provided by your cloud environment
 - Standardized YAML syntax for common operations
 - Create users, install packages, etc
 - Modular and highly configurable
 
 ---
 
-## Overview
+## Integration
 
 - Can be used to bootstrap other CM tools or agents
 - Widely used and broadly supported solution
@@ -36,12 +37,15 @@ class: center, middle
 
 ---
 
-## Overview
+## Availability
 
 - Standard solution in cloud images from many distributions
   - [Fedora][]
   - [Ubuntu][]
 - You may already be using it
+  - Provisions ssh keys
+  - Grows root filesystem
+  - Sets system hostname
 
 [fedora]: http://fedoraproject.org/en/get-fedora-options#clouds
 [ubuntu]: http://cloud-images.ubuntu.com/
@@ -50,7 +54,7 @@ class: center, middle
 
 ## Data sources
 
-Cloud-init tries several sources for user-data:
+Cloud-init supports several metadata sources:
 
 - EC2 metadata (EC2 and OpenStack Nova)
 - Config Drive 
@@ -58,6 +62,46 @@ Cloud-init tries several sources for user-data:
 - NoCloud
 - OpenNebula
 - Fallback/None
+
+---
+
+## OpenStack/EC2 data source
+
+- Access metadata service at http://169.254.169.254.
+- NAT rules on your network controller make this work
+
+---
+
+## OpenStack/EC2 data source
+
+.medium[
+
+    $ curl http://169.254.169.254/latest/meta-data
+    ami-id
+    ami-launch-index
+    ami-manifest-path
+    block-device-mapping/
+    hostname
+    instance-action
+    instance-id
+    instance-type
+    kernel-id
+    local-hostname
+    local-ipv4
+    placement/
+    public-hostname
+    public-ipv4
+    public-keys/
+    ramdisk-id
+    reservation-id
+]
+
+---
+
+## Meta-data and user-data
+
+- `meta-data` provided by cloud infrastructure (instance id, etc)
+- `user-data` is a chunk of arbitrary data that you provide
 
 ---
 
@@ -89,18 +133,150 @@ Many supported content types:
     A list of URLs, one per line. Cloud-init fetches content from each
     URL and handles it appropriately.
 
-- part-handler (python plugin handler)
+- arbitrary scripts (`#!`)
 
-    Package multiple user-data formats into a single MIME multipart
-    archive.
+    Run code with arbitrary interpreters.
 
 ---
 
 ## User-data content
 
-- arbitrary scripts (`#!`)
+- MIME multipart archive
 
-    Run code with arbitrary interpreters.
+    Package multiple user-data formats into a single MIME multipart
+    archive.
+
+- part-handler (`#part-handler`)
+
+    Handler for custom content types in a MIME archive.
+
+[Complete documentation][format]
+
+[format]: http://cloudinit.readthedocs.org/en/latest/topics/format.html
+
+---
+
+## Example user-data: scripts
+
+Run a script when the system first boots:
+
+    #!/bin/sh
+    yum -d1 -y install git screen vim-enhanced
+
+Doesn't have to be a `/bin/sh` script:
+
+    #!/usr/bin/python
+    import os
+    os.system('yum -d1 -y install ' +
+        'git screen vim-enhanced'.split())
+
+???
+
+Put this in a file and provide it to `nova boot --user-data=...`, or
+put it in the *Customization Script* field of the *Post-creating* tab
+when booting an instance in Horizion.
+
+---
+
+## Example user-data: cloud-config
+
+    #cloud-config
+    package_upgrade: true
+    packages:
+    - git
+    - screen
+    - vim-enhanced
+
+---
+
+## Example user-data: include
+
+    #include
+    http://config.example.com/cloud-config
+    http://config.dept.example.com/cloud-config
+
+---
+
+## Example user-data: MIME archive
+
+
+.small[
+```
+From nobody Thu Dec  5 13:49:30 2013
+Content-Type: multipart/mixed; boundary="===============0281124342848062795=="
+MIME-Version: 1.0
+
+--===============0281124342848062795==
+MIME-Version: 1.0
+Content-Type: text/x-shellscript; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.1"
+
+#!/bin/sh
+
+touch /root/flagfile
+
+
+--===============0281124342848062795==
+MIME-Version: 1.0
+Content-Type: text/cloud-config; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.2"
+
+packages:
+- vim-enhanced
+- git
+- screen
+
+--===============0281124342848062795==--
+```
+]
+
+---
+
+## Custom part handlers
+
+.medium[
+
+    def handle_part(data, ctype,
+        filename, payload):
+        # data = the cloudinit object
+        # ctype = "__begin__", "__end__", or the
+        # mime-type of the part that is being handled.
+        # filename = the filename of the part (or
+        #   a generated filename if none is 
+        #   present in mime data)
+        # payload = the parts' content
+
+    def list_types():
+      return ['text/x-myapp-configdata']
+]
+
+---
+
+## Heat and cloud-init
+
+- Heat injects information into instances via cloud-init
+- Default mechanism relies on custom `part-handler` 
+- You can also specify arbitrary `user-data` content in your
+  templates.
+
+---
+
+## Heat with arbitrary user-data
+
+    resources:
+      instance0:
+        type: OS::Nova::Server
+        properties:
+          user_data_format: RAW
+          user_data: |
+            #cloud-config
+            packages:
+              - vim
+              - screen
+              - git
+
 
     </textarea>
     <script src="remark.js" type="text/javascript"></script>
