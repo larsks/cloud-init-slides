@@ -1,0 +1,8 @@
+#cloud-config
+cloud_config_modules:
+- package-update-upgrade-install
+package_upgrade: true
+packages:
+- git
+- screen
+- vim-enhanced

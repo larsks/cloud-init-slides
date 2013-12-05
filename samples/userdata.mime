@@ -1,0 +1,27 @@
+From nobody Thu Dec  5 13:49:30 2013
+Content-Type: multipart/mixed; boundary="===============0281124342848062795=="
+MIME-Version: 1.0
+
+--===============0281124342848062795==
+MIME-Version: 1.0
+Content-Type: text/x-shellscript; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.1"
+
+#!/bin/sh
+
+touch /root/flagfile
+
+
+--===============0281124342848062795==
+MIME-Version: 1.0
+Content-Type: text/cloud-config; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.2"
+
+packages:
+- vim-enhanced
+- git
+- screen
+
+--===============0281124342848062795==--
