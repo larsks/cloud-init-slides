@@ -1,18 +1,17 @@
 @import url(http://fonts.googleapis.com/css?family=Droid+Serif);
 @import url(http://fonts.googleapis.com/css?family=Droid+Sans);
-@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
 
 body {
 	font-family: 'Droid Sans';
 	font-size: 30px;
-	color: #fcfcfc
 }
 h1, h2, h3 {
-	font-family: 'Yanone Kaffeesatz';
-	font-weight: 400;
+	font-family: 'Droid Sans';
+	font-weight: bold;
 	margin-bottom: 0;
+	margin-top: 2ex;
 }
-h1 { font-size: 4em; }
+h1 { font-size: 3em; }
 h2 { font-size: 2em; }
 h3 { font-size: 1.6em; }
 .footnote {
@@ -31,7 +30,8 @@ code {
 	-web-border-radius: 5px;
 	background: #c7c8c2;
 	border-radius: 5px;
-	font-size: 16px;
+	font-size: 14px;
+	padding: 2px;
 }
 .pull-left {
 	float: left;
@@ -113,5 +113,7 @@ code {
 }
 
 .remark-slide-content {
-	background-image: url("background.png");
+	background-image: url("assets/background.png");
+	color: #fcfcfc;
 }
+

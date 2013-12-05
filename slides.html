@@ -1,141 +1,114 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Title</title>
+    <title>Introduction to cloud=init</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="slides.css"></link>
   </head>
   <body>
     <textarea id="source">
 
-class: center, middle, inverse
+class: center, middle
+# Introduction to cloud-init
 
-# OpenStack Upgrades
+- Steve Hardy (shardy@redhat.com)
+- Lars Kellogg-Stedman (lars@redhat.com)
 
 ---
- 
+
 ## Overview
 
-Three upgrade scenarios:
-
-1. Upgrade everything at once
-
-2. Upgrade one service at a time
-
-3. Upgrade one service at time with a parallel Havana Nova
-   environment.
+- Provides first-boot customization for cloud instances
+- Standardized YAML syntax for common operations
+- Create users, install packages, etc
+- Modular and highly configurable
 
 ---
- 
-## Scenario 1: Everything, all at once
 
-- Simple because there's no orchestration involved
-- Good for development or POC environments
-- Not so good for real deployments because of extended downtime
+## Overview
 
----
- 
-## Scenario 2: Everything, one at a time
-
-- Instead of one major service interruption...
-- ...lots of smaller ones.  Yay!
-- Schedule Nova upgrade separately from other services
+- Can be used to bootstrap other CM tools or agents
+- Widely used and broadly supported solution
+  - OpenStack
+  - EC2
+  - RHEV
+  - (vSphere, OpenNebula, MAAS, CloudStack, OVF)
 
 ---
- 
-## Scenario 3: Parallel Nova environment (1)
 
-- Like scenario 2, except for Nova
-- Deploy Havana Nova environment on new hardware
-- Share glance, cinder, keystone, neutron with
-  Grizzly Nova environment
-- Requires additional hardware
+## Overview
 
----
- 
-## Scenario 3: Parallel Nova environment (2)
+- Standard solution in cloud images from many distributions
+  - [Fedora][]
+  - [Ubuntu][]
+- You may already be using it
 
-- Migrate workloads through attrition, or
-- Migrate workloads via snapshot-delete-boot
+[fedora]: http://fedoraproject.org/en/get-fedora-options#clouds
+[ubuntu]: http://cloud-images.ubuntu.com/
 
 ---
- 
-## Scenario 3: Parallel Nova environment (3)
 
-- New Nova environment is set up in Keystone as a new region.
-- CLI tools are happy (with --os-region-name or `OS_REGION_NAME`)
-- Horizon not so much
+## Data sources
 
----
- 
-## Scenario 3: Parallel Nova environment (4)
+Cloud-init tries several sources for user-data:
 
-Migrating an instance looks like:
-
-    nova --os-region-name oldregion \
-      image-create <instance> <instance>_migrate
-    nova --os-region-name oldregion \
-      delete <instance>
-    nova --os-region-name newregion \
-      boot --image <instance>_migrate ... <instance>
-    nova --os-region-name newregion \
-      add-floating-ip <instance> <ipaddr>
+- EC2 metadata (EC2 and OpenStack Nova)
+- Config Drive 
+- AltCloud (RHEVm, vSphere)
+- NoCloud
+- OpenNebula
+- Fallback/None
 
 ---
- 
-## Scenario 3: Parallel Nova environment (5)
 
-- Reinstall Grizzly compute nodes as Havana compute nodes
-  after all workloads are gone
+## User-data content
 
----
- 
-## Upgrading Quantum to Neutron (1)
-
-- What were they thinking?
-- Configuration files have all changed location
-- Python modules have all changed names
-- Configuration files *include* names of Python modules
+- Either plain text or Mime Multi-part archive
+- Optionally gzip compressed 
+- Retrieved from DataSource to `/var/lib/cloud`
 
 ---
- 
-## Upgrading Quantum to Neutron (2)
+## User-data content
 
-![Upgrading quantum][upgrade-quantum]
+Many supported content types:
 
-[upgrade-quantum]: upgrade-quantum.svg
+- cloud-config (`#cloud-config`)
 
----
- 
-## Upgrading Quantum to Neutron (3)
+    YAML configuration file for performing many common configuration
+    actions.
 
-- What were they thinking?
-- Quantum database has no versioning information 
-  until you explicitly put it there
-- So nothing as simple as `neutron-manage db sync`.
-- Starting Neutron before database upgrade can break database
+- cloud-boothook (`#cloud-boothook`)
+
+    Saved to a file and executed early in the boot process.
 
 ---
- 
-## Upgrading Quantum to Neutron (4)
+## User-data content
 
-- New `openstack-neutron` packages take much of the pain away
-- Quantum client seems happy talking to Neutron server
+- include files (`#include`)
+
+    A list of URLs, one per line. Cloud-init fetches content from each
+    URL and handles it appropriately.
+
+- part-handler (python plugin handler)
+
+    Package multiple user-data formats into a single MIME multipart
+    archive.
 
 ---
- 
-## Upgrading Horizon
 
-- `local_settings` substantially different between Grizzly and Havana
-  packages
-- Requires manual inspection
+## User-data content
+
+- arbitrary scripts (`#!`)
+
+    Run code with arbitrary interpreters.
 
     </textarea>
-    <script src="remark.js" type="text/javascript">
-    </script>
+    <script src="remark.js" type="text/javascript"></script>
     <script type="text/javascript">
       var slideshow = remark.create();
     </script>
   </body>
 </html>
+
+<!-- vim: set ft=markdown : -->
 
