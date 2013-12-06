@@ -254,6 +254,57 @@ packages:
 
 ---
 
+## Cloud-config
+
+Cloud-config is a simple YAML DSL for expressing system configuration
+tasks:
+
+- Disk configuration
+- Execute arbitrary commands
+- Create users and groups
+- Package management
+- Create files
+- Bootstrap Chef/Puppet
+
+---
+
+## Cloud-config
+
+- `user-data` processed by modules
+  (`.../site-packages/cloud-init/config/cc_*`)
+- `cloud_init_modules` and `cloud_config_modules` determine which
+  modules are run when
+- merges configurations from multiple sources
+
+---
+
+## Cloud-config
+
+For example, if `/etc/cloud/cloud.cfg` does not include
+`package-update-upgrade-install` module (package management):
+
+    #cloud-config
+    cloud_config_modules:
+      - package-update-upgrade-install
+    package_upgrade: true
+    packages:
+      - git
+      - screen
+      - vim-enhanced
+
+---
+
+## Cloud-config
+
+- Lots of [examples][] in the [documentation][]
+- Modules are a little under-documented
+- Use the source (Luke)
+
+[examples]: http://cloudinit.readthedocs.org/en/latest/topics/examples.html
+[documentation]: http://cloudinit.readthedocs.org/
+
+---
+
 ## Heat and cloud-init
 
 - Heat injects information into instances via cloud-init
@@ -276,6 +327,16 @@ packages:
               - vim
               - screen
               - git
+
+---
+
+class: center, middle
+
+# Questions?
+
+- Slides sources at http://github.com/larsks/cloud-init-slides
+- Steve Hardy (shardy@redhat.com)
+- Lars Kellogg-Stedman (lars@redhat.com)
 
 
     </textarea>
