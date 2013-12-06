@@ -75,8 +75,8 @@ Cloud-init supports several metadata sources:
 
 - Access metadata service at http://169.254.169.254.
 - NAT rules on your network controller make this work
-- Service provided by `neutron-metadata-agent` (via per-router
-  `neutron-metadata-proxy`) or `nova-api-metadata`
+- Service provided by `nova-api` (accessed via per-router
+  `neutron-metadata-proxy` in neutron)
 
 ---
 
@@ -300,7 +300,7 @@ tasks:
 
 ## Cloud-config
 
-For example, if `/etc/cloud/cloud.cfg` does not include
+If `/etc/cloud/cloud.cfg` does not include
 `package-update-upgrade-install` module (package management):
 
     #cloud-config
