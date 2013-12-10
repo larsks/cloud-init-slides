@@ -175,10 +175,14 @@ Doesn't have to be a `/bin/sh` script:
 
     #!/usr/bin/python
     import os
-    os.system('yum -d1 -y install ' +
-        'git screen vim-enhanced'.split())
+    os.system('yum -d1 -y install ' \
+        'git screen vim-enhanced')
 
 ???
+
+Your `user-data` can simply be a script.  You can use an interpreter
+of your choice by putting something other than `/bin/sh` after the
+`#!`.
 
 Put this in a file and provide it to `nova boot --user-data=...`, or
 put it in the *Customization Script* field of the *Post-creating* tab
@@ -197,8 +201,31 @@ when booting an instance in Horizon.
 
 ???
 
-This will upgrade all your packages and make sure that `git`,
+The `cloud-config` format provides a convenient syntax for
+accomplishing common system configuration tasks.
+
+This example will upgrade all your packages and make sure that `git`,
 `screen`, and `vim-enhanced` are all installed.
+
+---
+
+The previous example may be a lie.
+
+    #cloud-config
+    cloud_config_modules:
+    - package-update-upgrade-install
+    package_upgrade: true
+    packages:
+    - git
+    - screen
+    - vim-enhanced
+
+???
+
+The default cloud configuration file (`/etc/cloud/cloud.cfg`) on RHEL
+does not include the `package-update-upgrade-install` module (although
+it looks like the Fedora package does, so the previous example would
+have Just Worked).
 
 ---
 
@@ -210,6 +237,13 @@ This will upgrade all your packages and make sure that `git`,
 
 
 ???
+
+You may want to do more than one thing with `cloud-init`: e.g., maybe
+you want to use a `cloud-config` stanza for installing packages and
+setting up users, but you want to run a custom script for setting up a
+more complicated application.
+
+One mechanism would be to use an `#include` file.
 
 An `#include` file is a list of URLs, one per line.  Each URL will be
 fetched and then processed according to the same rules as the
@@ -252,6 +286,12 @@ packages:
 ```
 ]
 
+???
+
+Another alternative is to embed your scripts in a multipart MIME
+archive.  `cloud-init` will extract the parts and process each one
+appropriately.
+
 ---
 
 ## Custom part handlers
@@ -272,19 +312,26 @@ packages:
       return ['text/x-myapp-configdata']
 ]
 
+???
+
+A custom `#part-handler` enables `cloud-init` to handle unknown MIME
+types in a multipart MIME archive.  This lets you include
+application-specific data in your cloud configuration and have
+`cloud-init` hand it off to your own code for processing.  Heat in its
+default mode of operation takes advantage of this capability.
+
 ---
 
 ## Cloud-config
 
-Cloud-config is a simple YAML DSL for expressing system configuration
-tasks:
+`cloud-init` has configuration modules for:
 
 - Disk configuration
-- Execute arbitrary commands
-- Create users and groups
+- Command execution
+- Creating users and groups
 - Package management
-- Create files
-- Bootstrap Chef/Puppet
+- Writing content files
+- Bootstrapping Chef/Puppet
 
 ---
 
@@ -296,21 +343,10 @@ tasks:
   modules are run when
 - merges configurations from multiple sources
 
----
+???
 
-## Cloud-config
-
-If `/etc/cloud/cloud.cfg` does not include
-`package-update-upgrade-install` module (package management):
-
-    #cloud-config
-    cloud_config_modules:
-      - package-update-upgrade-install
-    package_upgrade: true
-    packages:
-      - git
-      - screen
-      - vim-enhanced
+Settings in `/etc/cloud/cloud.cfg` determine which modules are run at
+which stages.
 
 ---
 
@@ -367,7 +403,10 @@ class: center, middle
 
 # Questions?
 
+- Slides available online at
+  http://people.redhat.com/lkellogg/2013/12/10/cloud-init-slides/
 - Slides sources at http://github.com/larsks/cloud-init-slides
+----
 - Steve Hardy (shardy@redhat.com)
 - Lars Kellogg-Stedman (lars@redhat.com)
 
